@@ -35,8 +35,12 @@ public sealed class GoogleDataManagerClientUtil : IGoogleDataManagerClientUtil
         return _services.Get(fileName, cancellationToken);
     }
 
-    public ValueTask<bool> Remove(string fileName, CancellationToken cancellationToken = default) => _services.Remove(fileName, cancellationToken);
-    public void RemoveSync(string fileName, CancellationToken cancellationToken = default) => _services.RemoveSync(fileName, cancellationToken);
+    public ValueTask<bool> Remove(string fileName, CancellationToken cancellationToken = default) =>
+        _services.Remove(fileName, cancellationToken);
+
+    public void RemoveSync(string fileName, CancellationToken cancellationToken = default) =>
+        _services.RemoveSync(fileName, cancellationToken);
+
     public void Dispose() => _services.Dispose();
     public ValueTask DisposeAsync() => _services.DisposeAsync();
 }
