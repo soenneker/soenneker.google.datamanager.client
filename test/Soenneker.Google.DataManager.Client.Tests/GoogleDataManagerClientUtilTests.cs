@@ -15,7 +15,7 @@ namespace Soenneker.Google.DataManager.Client.Tests;
 public sealed class GoogleDataManagerClientUtilTests
 {
     [Test]
-    public async Task Cache_is_keyed_by_filename_and_requests_data_manager_scope()
+    public async ValueTask Cache_is_keyed_by_filename_and_requests_data_manager_scope()
     {
         var credentials = new Credentials();
         await using var provider = new GoogleDataManagerClientUtil(credentials);
@@ -32,7 +32,7 @@ public sealed class GoogleDataManagerClientUtilTests
     }
 
     [Test]
-    public async Task Scoped_registration_owns_separate_services()
+    public async ValueTask Scoped_registration_owns_separate_services()
     {
         var services = new ServiceCollection();
         services.AddScoped<IGoogleCredentialsUtil, Credentials>();
@@ -47,7 +47,7 @@ public sealed class GoogleDataManagerClientUtilTests
     }
 
     [Test]
-    public async Task Get_after_disposal_is_rejected_without_disposing_shared_credentials()
+    public async ValueTask Get_after_disposal_is_rejected_without_disposing_shared_credentials()
     {
         var credentials = new Credentials();
         var provider = new GoogleDataManagerClientUtil(credentials);
