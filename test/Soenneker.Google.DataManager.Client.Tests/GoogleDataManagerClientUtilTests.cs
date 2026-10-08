@@ -15,24 +15,24 @@ namespace Soenneker.Google.DataManager.Client.Tests;
 public sealed class GoogleDataManagerClientUtilTests
 {
     [Test]
-    public async ValueTask Cache_is_keyed_by_filename_and_requests_data_manager_scope()
+    public async ValueTask Cache_is_keyed_by_filename_and_requests_data_manager_scope(CancellationToken cancellationToken)
     {
         var credentials = new Credentials();
         await using var provider = new GoogleDataManagerClientUtil(credentials);
-        DataManagerService[] results = await Task.WhenAll(Enumerable.Range(0, 20).Select(_ => provider.Get("first.json").AsTask()));
+        DataManagerService[] results = await Task.WhenAll(Enumerable.Range(0, 20).Select(_ => provider.Get("first.json", cancellationToken: cancellationToken).AsTask()));
         Check(results.All(service => ReferenceEquals(service, results[0])), "Concurrent gets created different services.");
         Check(credentials.Files.SequenceEqual(new[] { "first.json" }), "Credential loaded more than once.");
         Check(ReferenceEquals(results[0].HttpClientInitializer, credentials.Credential), "Shared credential not used.");
-        Check(!ReferenceEquals(results[0], await provider.Get("second.json")), "Different files share a client.");
-        Check(await provider.Remove("first.json"), "Client not removed.");
-        Check(!ReferenceEquals(results[0], await provider.Get("first.json")), "Removed client was reused.");
-        provider.RemoveSync("second.json");
-        await provider.Get("second.json");
+        Check(!ReferenceEquals(results[0], await provider.Get("second.json", cancellationToken: cancellationToken)), "Different files share a client.");
+        Check(await provider.Remove("first.json", cancellationToken: cancellationToken), "Client not removed.");
+        Check(!ReferenceEquals(results[0], await provider.Get("first.json", cancellationToken: cancellationToken)), "Removed client was reused.");
+        provider.RemoveSync("second.json", cancellationToken: cancellationToken);
+        await provider.Get("second.json", cancellationToken: cancellationToken);
         Check(credentials.Files.Count == 4 && !credentials.Disposed, "Invalid cache or credential ownership.");
     }
 
     [Test]
-    public async ValueTask Scoped_registration_owns_separate_services()
+    public async ValueTask Scoped_registration_owns_separate_services(CancellationToken cancellationToken)
     {
         var services = new ServiceCollection();
         services.AddScoped<IGoogleCredentialsUtil, Credentials>();
@@ -42,19 +42,19 @@ public sealed class GoogleDataManagerClientUtilTests
         await using var second = container.CreateAsyncScope();
         var a = first.ServiceProvider.GetRequiredService<IGoogleDataManagerClientUtil>();
         var b = second.ServiceProvider.GetRequiredService<IGoogleDataManagerClientUtil>();
-        Check(!ReferenceEquals(await a.Get("same.json"), await b.Get("same.json")), "Scopes share clients.");
+        Check(!ReferenceEquals(await a.Get("same.json", cancellationToken: cancellationToken), await b.Get("same.json", cancellationToken: cancellationToken)), "Scopes share clients.");
         Check(!ReferenceEquals(first.ServiceProvider.GetRequiredService<IGoogleCredentialsUtil>(), second.ServiceProvider.GetRequiredService<IGoogleCredentialsUtil>()), "Scopes share credentials.");
     }
 
     [Test]
-    public async ValueTask Get_after_disposal_is_rejected_without_disposing_shared_credentials()
+    public async ValueTask Get_after_disposal_is_rejected_without_disposing_shared_credentials(CancellationToken cancellationToken)
     {
         var credentials = new Credentials();
         var provider = new GoogleDataManagerClientUtil(credentials);
-        await provider.Get("first.json");
+        await provider.Get("first.json", cancellationToken: cancellationToken);
         await provider.DisposeAsync();
         Check(!credentials.Disposed, "Provider disposed injected credentials.");
-        try { await provider.Get("first.json"); }
+        try { await provider.Get("first.json", cancellationToken: cancellationToken); }
         catch (ObjectDisposedException) { return; }
         throw new Exception("Disposed provider returned a service.");
     }
