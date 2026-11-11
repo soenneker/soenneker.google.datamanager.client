@@ -47,7 +47,7 @@
 
     <ItemGroup>
         <PackageReference Include="Google.Apis.DataManager.v1" Version="1.78.0.4327" />
-        <PackageReference Include="Soenneker.Google.Credentials" Version="11.0.2672" />
+        <PackageReference Include="Soenneker.Google.Credentials" Version="11.0.2673" />
     </ItemGroup>
 </Project>
 
